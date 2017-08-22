@@ -47,7 +47,7 @@ shinyUI(fluidPage(
                 tabPanel("Overview",h4(p("How to use this App")),
                          
                          p("To use this app you need a document corpus in txt file format. Make sure each document is separated from another document with a new line character.
-                           To do basic Text Analysis in your text corpus, click on Browse in left-sidebar panel and upload the txt file. Once the file is uploaded it will do the computations in 
+                           To do segmentation based on text corpus, click on Browse in left-sidebar panel and upload the txt file. Once the file is uploaded it will do the computations in 
                             back-end with default inputs and accordingly results will be displayed in various tabs.", align = "justify"),
                          p("If you wish to change the input, modify the input in left side-bar panel and click on Apply changes. Accordingly results in other tab will be refreshed
                            ", align = "Justify"),
