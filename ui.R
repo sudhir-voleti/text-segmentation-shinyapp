@@ -76,7 +76,7 @@ shinyUI(fluidPage(
                 tabPanel("Segmentation - Word cloud",uiOutput("segplots")),
                 tabPanel("Segmentation - Co-occurrence",uiOutput("segcoocrplots")),
                 tabPanel("Segmentation - Data",br(),br(),
-                         downloadButton('downloadData2', 'Downlaod Segmentation data (Works only in browser)'), br(),br(),
+                         downloadButton('downloadData2', 'Download Segmentation data (Works only in browser)'), br(),br(),
                          dataTableOutput("table0"))
                 
                 )
