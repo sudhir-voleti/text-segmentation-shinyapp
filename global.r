@@ -176,8 +176,9 @@ dtm.tcm.creator <- function(text,id = "",
                    progressbar = F)
     
     vocab = create_vocabulary(it_0, ngram = c(2L, 2L))
-    pruned_vocab = prune_vocabulary(vocab, term_count_min = bigram.min.freq)
-    replace_list = pruned_vocab$vocab$terms[order(pruned_vocab$vocab$terms_counts, decreasing = T)]
+    pruned_vocab = data.frame(prune_vocabulary(vocab, term_count_min = bigram.min.freq))
+    
+    replace_list = pruned_vocab$term[order(pruned_vocab$term_count, decreasing = T)]
     
     # Cut the bi-grams upto 200 words
     
