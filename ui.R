@@ -17,8 +17,8 @@ library(tidyr)
 
 shinyUI(fluidPage(
   
- titlePanel("Text Segmentation"),
-  
+# titlePanel("Text Segmentation"),
+ titlePanel(title=div(img(src="logo.png",align='right'),"Text Segmentation")), 
   # Input in sidepanel:
   sidebarPanel(
     
