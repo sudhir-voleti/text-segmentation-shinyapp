@@ -393,27 +393,48 @@ server <- function(input, output, session) {
   })
   
   max_plots = 20
+# CORRECTED CODE BLOCK
   for (i in 1:max_plots) {
     local({
       my_i <- i
       plotname <- paste("plot", my_i, sep="")
+      
       output[[plotname]] <- renderPlot({
+        # Ensure all reactive dependencies are ready
         req(clust(), tdm())
         cl <- clust()
+        
+        # Don't try to render a plot for a segment that doesn't exist
         if (my_i > length(cl$size)) return(NULL) 
         
+        # Calculate percentages
         pct <- round((cl$size/sum(cl$size))*100, 2)
+        
+        # Subset the term-document matrix for the current segment
         stdm <- tdm()[, (cl$cluster == my_i), drop = FALSE]
+        
+        # Calculate word frequencies for the segment
         m <- as.matrix(stdm)
         v <- sort(rowSums(m), decreasing = TRUE)
-        v <- data.frame(v[v > 0])
         
-        if (nrow(v) == 0) return(NULL) 
-        n <- min(40, nrow(v))
-        top_word <- as.matrix(v[1:n, ])
-        row.names(top_word) <- row.names(v)[1:n, ]
+        # Filter for words that actually appear in this segment
+        v <- v[v > 0]
         
-        wordcloud(rownames(top_word), top_word, scale=c(4,1), min.freq = 1, random.order=FALSE, random.color=FALSE, colors=brewer.pal(8, "Dark2"))
+        # If no words are left after filtering, don't generate a plot
+        if (length(v) == 0) return(NULL) 
+
+        # Directly use the named vector for the word cloud
+        # names(v) provides the words, v provides the frequencies.
+        # Use max.words to control the number of words shown.
+        wordcloud(words = names(v), 
+                  freq = v, 
+                  max.words = 40, # Limit to top 40 words
+                  scale=c(4,1), 
+                  random.order=FALSE, 
+                  random.color=FALSE, 
+                  colors=brewer.pal(8, "Dark2"))
+
+        # Add title and box
         mtext(paste("Segment", my_i, "(", pct[my_i], "%)"), side = 3, line = 2, cex=2)
         box(lty = '11', col = 'black')
       })
