@@ -169,16 +169,13 @@ dtm.tcm.creator <- function(text, id = "", std.clean = TRUE, std.stop.words = TR
 #------------------------------------------------------------------#
 # 2. UI Definition
 #------------------------------------------------------------------#
-shinyUI(fluidPage(
+# --- MODIFIED: Assign UI definition to a variable 'ui' ---
+ui <- fluidPage(
   titlePanel(title=div(img(src="logo.png",align='right'),"Text Segmentation")),
   
   sidebarPanel(
-    # --- REVISED: File input now accepts both .txt and .csv ---
     fileInput("file", "Upload Data File (.txt or .csv)"),
-    
-    # --- NEW: Dynamic UI for column selection will appear here ---
     uiOutput("column_selectors_ui"),
-    
     hr(),
     h4("Analysis Parameters"),
     textInput("stopw", ("Enter stop words (comma-separated)"), value = "will,can"),
@@ -228,18 +225,17 @@ shinyUI(fluidPage(
                          dataTableOutput("table0"))
     )
   )
-))
+)
 
 #------------------------------------------------------------------#
 # 3. Server Logic
 #------------------------------------------------------------------#
-shinyServer(function(input, output, session) {
+# --- MODIFIED: Assign server function to a variable 'server' ---
+server <- function(input, output, session) {
   set.seed(2092014)
 
-  # --- NEW: Reactive values to store data states ---
   data_store <- reactiveValues(raw_data = NULL)
 
-  # --- NEW: Observer to load any type of file ---
   observeEvent(input$file, {
     req(input$file)
     ext <- file_ext(input$file$name)
@@ -253,11 +249,10 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  # --- NEW: Dynamic UI for CSV column selection ---
   output$column_selectors_ui <- renderUI({
     req(input$file, data_store$raw_data)
     ext <- file_ext(input$file$name)
-    if (ext != "csv") return(NULL) # Only show for CSV files
+    if (ext != "csv") return(NULL) 
 
     column_names <- names(data_store$raw_data)
     tagList(
@@ -266,7 +261,6 @@ shinyServer(function(input, output, session) {
     )
   })
 
-  # --- REVISED: This reactive prepares a standardized data frame ---
   prepared_data <- reactive({
     req(input$file, data_store$raw_data)
     ext <- file_ext(input$file$name)
@@ -275,12 +269,10 @@ shinyServer(function(input, output, session) {
       docs <- data_store$raw_data
       df <- data.frame(Doc.id = seq_along(docs), Document = docs, stringsAsFactors = FALSE)
     } else if (ext == "csv") {
-      req(input$text_col) # Require user to select the text column
+      req(input$text_col)
       
-      # Select the text column
       docs <- data_store$raw_data[[input$text_col]]
       
-      # Select the ID column or create one
       doc_ids <- if (!is.null(input$id_col) && input$id_col != "none") {
         data_store$raw_data[[input$id_col]]
       } else {
@@ -291,11 +283,9 @@ shinyServer(function(input, output, session) {
       return(NULL)
     }
     
-    # Filter out empty documents
     return(df[df$Document != "" & !is.na(df$Document), ])
   })
   
-  # --- This block now uses the standardized `prepared_data()` reactive ---
   dtm_tcm <- reactive({
     req(prepared_data())
     
@@ -325,8 +315,6 @@ shinyServer(function(input, output, session) {
     return(list(dtm = dtm))
   })
   
-  # The rest of your server logic remains largely unchanged as it depends on `dtm_tcm`
-  
   wordcounts <- reactive({
     req(dtm_tcm())
     dtm.word.count(dtm_tcm()$dtm)
@@ -343,7 +331,6 @@ shinyServer(function(input, output, session) {
     req(dtm_tcm(), wordcounts())
     sortedobj = dtm_tcm()$dtm[, order(wordcounts(), decreasing = T), drop=FALSE]
     
-    # Ensure there are enough rows and columns to display
     rows_to_show <- min(10, nrow(sortedobj))
     cols_to_show <- min(10, ncol(sortedobj))
     
@@ -413,7 +400,7 @@ shinyServer(function(input, output, session) {
       output[[plotname]] <- renderPlot({
         req(clust(), tdm())
         cl <- clust()
-        if (my_i > length(cl$size)) return(NULL) # Don't plot if segment doesn't exist
+        if (my_i > length(cl$size)) return(NULL) 
         
         pct <- round((cl$size/sum(cl$size))*100, 2)
         stdm <- tdm()[, (cl$cluster == my_i), drop = FALSE]
@@ -421,7 +408,7 @@ shinyServer(function(input, output, session) {
         v <- sort(rowSums(m), decreasing = TRUE)
         v <- data.frame(v[v > 0])
         
-        if (nrow(v) == 0) return(NULL) # Don't plot empty segments
+        if (nrow(v) == 0) return(NULL) 
         n <- min(40, nrow(v))
         top_word <- as.matrix(v[1:n, ])
         row.names(top_word) <- row.names(v)[1:n, ]
@@ -449,7 +436,7 @@ shinyServer(function(input, output, session) {
       output[[plotname]] <- renderPlot({
         req(clust(), tdm())
         cl <- clust()
-        if (my_i > length(cl$size)) return(NULL) # Don't plot if segment doesn't exist
+        if (my_i > length(cl$size)) return(NULL)
         
         pct <- round((cl$size/sum(cl$size))*100, 2)
         stdm <- tdm()[, (cl$cluster == my_i), drop = FALSE]
@@ -478,4 +465,7 @@ shinyServer(function(input, output, session) {
   output$table0 <- renderDataTable({
     da()
   })
-})
+}
+
+# --- ADDED: This line creates the Shiny app object and is ESSENTIAL for app.R ---
+shinyApp(ui = ui, server = server)
